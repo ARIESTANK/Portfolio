@@ -398,8 +398,7 @@ export default function Home() {
   /* Grid columns that scale with viewport */
   const skillGrid = sm ? "1fr 1fr" : md ? "1fr 1fr" : lg ? "repeat(3,1fr)" : "repeat(4,1fr)";
   const projGrid  = sm || md ? "1fr" : "repeat(2,1fr)";
-  const gutter    = sm ? "0 16px" : "0 24px";
-  const secPad    = `clamp(48px,7vw,100px) clamp(16px,4vw,24px)`;
+  const secPad = `clamp(48px,7vw,100px) clamp(16px,5vw,64px)`;
 
   return (
     <div style={{
@@ -516,8 +515,8 @@ export default function Home() {
         position: "relative",
         paddingTop:    `clamp(96px,12vw,148px)`,
         paddingBottom: `clamp(56px,8vw,100px)`,
-        paddingLeft:   `clamp(16px,4vw,24px)`,
-        paddingRight:  `clamp(16px,4vw,24px)`,
+        paddingLeft:   `clamp(16px,5vw,64px)`,
+        paddingRight:  `clamp(16px,5vw,64px)`,
         overflow: "hidden",
         minHeight: "clamp(480px,60vw,640px)",
       }}>
@@ -525,7 +524,7 @@ export default function Home() {
         <Blob w="clamp(130px,24vw,300px)" h="clamp(130px,24vw,300px)" color={C.teal}   top="50%" right="-8%" delay="3s" />
         <Blob w="clamp(120px,16vw,200px)" h="clamp(120px,16vw,200px)" color={C.purple} bottom="5%" left="40%" delay="5.5s" />
 
-        <div style={{ maxWidth: 1120, margin: "0 auto", position: "relative", zIndex: 10 }}>
+        <div style={{ maxWidth: "100%", position: "relative", zIndex: 10 }}>
 
           {/* Role label */}
           <p style={{
@@ -539,7 +538,7 @@ export default function Home() {
           <h1 style={{
             ...anim(100),
             fontFamily: "'Syne',sans-serif", fontWeight: 800,
-            fontSize: "clamp(2rem,7vw,5rem)",
+            fontSize: "clamp(1.8rem,4.5vw,3.8rem)",
             lineHeight: 1.06,
             background: `linear-gradient(120deg, ${C.text} 0%, ${C.accent} 50%, ${C.text} 100%)`,
             backgroundSize: "200% auto",
@@ -614,7 +613,7 @@ export default function Home() {
 
       {/* ── SKILLS ── */}
       <section id="skills" style={{ padding: secPad }}>
-        <div ref={skillsRef} style={{ maxWidth: 1120, margin: gutter }}>
+        <div ref={skillsRef} style={{ maxWidth: "100%" }}>
           <p style={{ fontSize:"clamp(9px,1vw,11px)", letterSpacing:".26em", textTransform:"uppercase", opacity:.36, marginBottom:6 }}>
             Expertise
           </p>
@@ -633,7 +632,7 @@ export default function Home() {
 
       {/* ── PROJECTS ── */}
       <section id="projects" style={{ padding: secPad, background: C.surface2 }}>
-        <div style={{ maxWidth: 1120, margin: gutter }}>
+        <div style={{ maxWidth: "100%" }}>
           <p style={{ fontSize:"clamp(9px,1vw,11px)", letterSpacing:".26em", textTransform:"uppercase", opacity:.36, marginBottom:6 }}>
             Portfolio
           </p>
