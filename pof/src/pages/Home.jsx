@@ -559,7 +559,7 @@ export default function Home() {
               I build&nbsp;
             </span>
             <span style={{ fontSize: "clamp(13px,1.6vw,18px)", fontWeight:500 }}>
-              <Typewriter words={["web applications.","REST APIs.","AI-powered apps.","IoT systems.","reliable backends."]} />
+              <Typewriter words={["web applications.","REST APIs.","AI-powered apps.","IoT systems.","reliable backends services"]} />
             </span>
           </div>
 
