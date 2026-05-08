@@ -63,7 +63,7 @@ const PROJECTS = [
     desc:   "IoT-based attendance system using C++ for device programming, Node.js backend, and Supabase for real-time data.",
     tags:   ["React","Node.js","C++ (IoT)","Supabase"],
     color:  C.coral,
-    image:  ["/images/attendance/attendance.PNG","/images/addtendance/attendance2.PNG","/images/addtendance/attendance3.PNG"],
+    image:  ["/images/attendance/attendance.PNG","/images/attendance/attendance2.PNG","/images/attendance/attendance3.PNG"],
     github: "https://github.com/ARIESTANK/Attendance_system_Project",
   },
   {
