@@ -83,8 +83,8 @@ const PROJECTS = [
     github: "https://hackatom2025.vercel.app",
   },
   {
-    title:  "Human Resource Management Project",
-    desc:   "HR management project using Java (Spring Boot) with oracle Database.",
+    title:  "Human Resource Management",
+    desc:   "HR management project using Java (Spring Boot) with Oracle Database.",
     tags:   ["React","Spring Boot","JWT Auth","Oracle","REST API"],
     color:  C.coral,
     image:  ["/images/hr/hr.PNG","/images/hr/hr2.PNG","/images/hr/hr3.PNG"],
@@ -127,6 +127,28 @@ function useVW() {
     return () => window.removeEventListener("resize", h);
   }, []);
   return vw;
+}
+
+/* ─────────────────────────────────────────
+   BREAKPOINTS — single source of truth
+   xs  < 400
+   sm  400–599
+   md  600–767
+   lg  768–1023
+   xl  >= 1024
+───────────────────────────────────────── */
+function useBP() {
+  const vw = useVW();
+  return {
+    xs:  vw < 400,
+    sm:  vw >= 400  && vw < 600,
+    md:  vw >= 600  && vw < 768,
+    lg:  vw >= 768  && vw < 1024,
+    xl:  vw >= 1024,
+    vw,
+    mobile: vw < 768,
+    tablet: vw >= 768 && vw < 1024,
+  };
 }
 
 /* ─────────────────────────────────────────
@@ -184,16 +206,17 @@ function Stat({ icon, val, label }) {
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center",
-      padding: "clamp(10px,2vw,16px) clamp(14px,2.5vw,22px)",
+      padding: "clamp(8px,2vw,16px) clamp(12px,2.5vw,22px)",
       borderRadius: 14, background: "rgba(232,228,223,0.04)",
-      border: `1px solid ${C.faint}`, gap: 4,
+      border: `1px solid ${C.faint}`, gap: 4, flex: "1 1 80px",
+      minWidth: 70,
     }}>
-      <span style={{ fontSize: "clamp(16px,2vw,22px)" }}>{icon}</span>
+      <span style={{ fontSize: "clamp(14px,2vw,22px)" }}>{icon}</span>
       <span style={{
-        fontSize: "clamp(18px,2.5vw,24px)", fontWeight: 800,
+        fontSize: "clamp(16px,2.5vw,24px)", fontWeight: 800,
         fontFamily: "'Syne',sans-serif", color: C.accent, lineHeight: 1,
       }}>{val}</span>
-      <span style={{ fontSize: "clamp(9px,1vw,11px)", opacity: 0.42, letterSpacing: "0.06em" }}>{label}</span>
+      <span style={{ fontSize: "clamp(8px,1vw,11px)", opacity: 0.42, letterSpacing: "0.06em" }}>{label}</span>
     </div>
   );
 }
@@ -208,8 +231,8 @@ function SkillPill({ skill, visible, delay }) {
       onMouseLeave={() => setHov(false)}
       style={{
         display: "flex", alignItems: "center",
-        gap: "clamp(8px,1vw,12px)",
-        padding: "clamp(10px,1.2vw,14px) clamp(10px,1.2vw,14px)",
+        gap: "clamp(6px,1vw,12px)",
+        padding: "clamp(8px,1.2vw,14px) clamp(8px,1.2vw,14px)",
         borderRadius: 12,
         background: hov ? "rgba(232,228,223,0.07)" : "rgba(232,228,223,0.04)",
         border: `1px solid ${hov ? "rgba(232,228,223,0.18)" : C.faint}`,
@@ -217,26 +240,167 @@ function SkillPill({ skill, visible, delay }) {
         transform: visible ? (hov ? "translateY(-3px)" : "translateY(0)") : "translateY(16px)",
         boxShadow: hov ? "0 8px 20px rgba(0,0,0,0.25)" : "none",
         transition: `opacity .5s ease ${delay}ms, transform .5s ease ${delay}ms, box-shadow .2s, border-color .2s`,
-        cursor: "default", minWidth: 0,
+        cursor: "default", minWidth: 0, width: "100%",
       }}
     >
       <div style={{
-        width: "clamp(28px,3vw,36px)", height: "clamp(28px,3vw,36px)",
+        width: "clamp(26px,3vw,36px)", height: "clamp(26px,3vw,36px)",
         borderRadius: 8, flexShrink: 0,
         background: clr + "22",
         display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: skill.icon.length === 2 ? "clamp(10px,1.1vw,13px)" : "clamp(14px,1.5vw,18px)",
+        fontSize: skill.icon.length === 2 ? "clamp(9px,1.1vw,13px)" : "clamp(12px,1.5vw,18px)",
         color: clr, fontWeight: 700, fontFamily: "monospace",
       }}>{skill.icon}</div>
-      <div style={{ minWidth: 0 }}>
+      <div style={{ minWidth: 0, flex: 1 }}>
         <div style={{
-          fontSize: "clamp(11px,1.1vw,13px)", fontWeight: 500, color: C.text,
+          fontSize: "clamp(10px,1.1vw,13px)", fontWeight: 500, color: C.text,
           overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
         }}>{skill.name}</div>
-        <div style={{ fontSize: "clamp(9px,0.85vw,11px)", color: clr, opacity: 0.75, textTransform: "capitalize", marginTop: 2 }}>
+        <div style={{ fontSize: "clamp(8px,0.85vw,11px)", color: clr, opacity: 0.75, textTransform: "capitalize", marginTop: 2 }}>
           {skill.cat}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────
+   IMAGE CAROUSEL — absolute-positioned slides
+   Each slide sits at inset:0 and fades/slides
+   in/out independently, so width is always 100%
+   of the container regardless of flex layout.
+───────────────────────────────────────── */
+function Carousel({ images, title }) {
+  const [idx, setIdx]   = useState(0);
+  const [prev2, setPrev] = useState(null); // previous index for exit animation
+  const startX  = useRef(0);
+  const touching = useRef(false);
+  const len = images.length;
+
+  // Auto-advance
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIdx(i => {
+        const next = (i + 1) % len;
+        setPrev(i);
+        return next;
+      });
+    }, 3200);
+    return () => clearInterval(timer);
+  }, [len]);
+
+  const goTo = useCallback((next, e) => {
+    if (e) e.stopPropagation();
+    setIdx(cur => { setPrev(cur); return (next + len) % len; });
+  }, [len]);
+
+  const onTouchStart = (e) => {
+    startX.current  = e.touches[0].clientX;
+    touching.current = true;
+  };
+  const onTouchEnd = (e) => {
+    if (!touching.current) return;
+    const diff = startX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) > 40) {
+      diff > 0
+        ? goTo(idx + 1)
+        : goTo(idx - 1);
+    }
+    touching.current = false;
+  };
+
+  return (
+    <div
+      style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden", userSelect: "none" }}
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* Render ALL slides stacked; show/hide via opacity + translate */}
+      {images.map((src, i) => {
+        const isActive = i === idx;
+        const isExiting = i === prev2 && prev2 !== idx;
+        return (
+          <div
+            key={i}
+            style={{
+              position: "absolute", inset: 0,
+              opacity: isActive ? 1 : 0,
+              transform: isActive
+                ? "translateX(0)"
+                : isExiting
+                  ? "translateX(-8%)"
+                  : "translateX(8%)",
+              transition: isActive || isExiting
+                ? "opacity 0.55s ease, transform 0.55s ease"
+                : "none",
+              pointerEvents: isActive ? "auto" : "none",
+              zIndex: isActive ? 1 : 0,
+            }}
+          >
+            <img
+              src={src}
+              alt={`${title} screenshot ${i + 1}`}
+              loading={i === 0 ? "eager" : "lazy"}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+            />
+          </div>
+        );
+      })}
+
+      {/* Arrows */}
+      {len > 1 && (
+        <>
+          <button
+            onClick={(e) => goTo(idx - 1, e)}
+            aria-label="Previous image"
+            style={{
+              position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)",
+              width: 32, height: 32, borderRadius: "50%",
+              background: "rgba(10,10,15,0.72)", border: `1px solid rgba(232,228,223,0.22)`,
+              color: C.text, cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              fontSize: 18, zIndex: 10, lineHeight: 1,
+              touchAction: "manipulation",
+            }}
+          >‹</button>
+          <button
+            onClick={(e) => goTo(idx + 1, e)}
+            aria-label="Next image"
+            style={{
+              position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+              width: 32, height: 32, borderRadius: "50%",
+              background: "rgba(10,10,15,0.72)", border: `1px solid rgba(232,228,223,0.22)`,
+              color: C.text, cursor: "pointer", display: "flex",
+              alignItems: "center", justifyContent: "center",
+              fontSize: 18, zIndex: 10, lineHeight: 1,
+              touchAction: "manipulation",
+            }}
+          >›</button>
+        </>
+      )}
+
+      {/* Dots */}
+      {len > 1 && (
+        <div style={{
+          position: "absolute", bottom: 8, left: "50%", transform: "translateX(-50%)",
+          display: "flex", gap: 5, zIndex: 10,
+        }}>
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={(e) => goTo(i, e)}
+              aria-label={`Go to image ${i + 1}`}
+              style={{
+                width: i === idx ? 18 : 6, height: 6, borderRadius: 3,
+                background: i === idx ? C.accent : "rgba(232,228,223,0.35)",
+                border: "none", cursor: "pointer", padding: 0,
+                transition: "width .3s, background .3s",
+                touchAction: "manipulation",
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -272,8 +436,9 @@ function ProjectModal({ project, onClose }) {
         position: "fixed", inset: 0, zIndex: 9999,
         background: `rgba(6,6,14,${visible ? 0.88 : 0})`,
         display: "flex", alignItems: "center", justifyContent: "center",
-        padding: "clamp(16px,3vw,32px)",
+        padding: "clamp(12px,3vw,32px)",
         transition: "background .26s ease",
+        overflowY: "auto",
       }}
     >
       <div
@@ -283,7 +448,7 @@ function ProjectModal({ project, onClose }) {
           border: `1px solid rgba(232,228,223,0.13)`,
           borderRadius: 20,
           width: "min(580px, 100%)",
-          maxHeight: "88vh",
+          maxHeight: "calc(100dvh - 24px)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
@@ -293,16 +458,16 @@ function ProjectModal({ project, onClose }) {
           boxShadow: `0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px ${project.color}22`,
         }}
       >
-        {/* ── Modal Header ── */}
+        {/* Modal Header */}
         <div style={{
           display: "flex", alignItems: "center",
           justifyContent: "space-between",
-          padding: "18px 20px 0 20px",
+          padding: "clamp(14px,2vw,18px) clamp(14px,2vw,20px) 0",
           gap: 12, flexShrink: 0,
         }}>
           <h3 style={{
             fontFamily: "'Syne',sans-serif", fontWeight: 700,
-            fontSize: "clamp(15px,1.6vw,19px)", color: C.text, margin: 0, lineHeight: 1.2,
+            fontSize: "clamp(14px,1.6vw,19px)", color: C.text, margin: 0, lineHeight: 1.2,
           }}>{project.title}</h3>
           <button
             onClick={handleClose}
@@ -315,54 +480,31 @@ function ProjectModal({ project, onClose }) {
               cursor: "pointer", fontSize: 15, lineHeight: 1,
               transition: "background .18s, color .18s",
             }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(232,228,223,0.14)"; e.currentTarget.style.color = C.text; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "rgba(232,228,223,0.07)"; e.currentTarget.style.color = "rgba(232,228,223,0.7)"; }}
             aria-label="Close modal"
           >✕</button>
         </div>
 
-        {/* ── Scrollable Body ── */}
+        {/* Scrollable Body */}
         <div style={{
           overflowY: "auto", flex: 1,
-          /* custom scrollbar */
           scrollbarWidth: "thin",
           scrollbarColor: "rgba(232,228,223,0.18) transparent",
         }}>
           {/* Image carousel */}
           <div style={{
-            margin: "16px 20px 0",
+            margin: "clamp(10px,2vw,16px) clamp(14px,2vw,20px) 0",
             borderRadius: 14,
             overflow: "hidden",
             background: "#0d0d1a",
             border: `1px solid ${C.faint}`,
-            height: "min(340px, 42vh)",
+            height: "clamp(180px,40vw,340px)",
             position: "relative",
           }}>
-            <div style={{
-              display: "flex",
-              width: `${images.length * 100}%`,
-              animation: `scrollImages ${images.length * 2}s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite`,
-              height: "100%",
-            }}>
-              {images.map((src, index) => (
-                <div key={index} style={{ width:"100%", height: "100%", display: "block" }}>
-                  <img
-                    src={src}
-                    alt={`${project.title} screenshot ${index + 1}`}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
+            <Carousel images={images} title={project.title} />
           </div>
 
           {/* Info */}
-          <div style={{ padding: "18px 20px 28px" }}>
+          <div style={{ padding: "clamp(14px,2vw,18px) clamp(14px,2vw,20px) clamp(20px,3vw,28px)" }}>
             <p style={{
               fontSize: "clamp(12px,1.1vw,14px)", color: C.muted,
               lineHeight: 1.78, margin: "0 0 14px",
@@ -387,7 +529,7 @@ function ProjectModal({ project, onClose }) {
               rel="noopener noreferrer"
               style={{
                 display: "inline-flex", alignItems: "center", gap: 9,
-                padding: "12px 26px", borderRadius: 999,
+                padding: "clamp(10px,1.4vw,12px) clamp(20px,2vw,26px)", borderRadius: 999,
                 background: project.color, color: "#0a0a0f",
                 fontSize: "clamp(12px,1.1vw,14px)", fontWeight: 700,
                 textDecoration: "none",
@@ -417,7 +559,7 @@ function ProjectModal({ project, onClose }) {
 ───────────────────────────────────────── */
 function ProjectCard({ project, delay }) {
   const [ref, inView] = useInView(0.06);
-  const [hov, setHov]       = useState(false);
+  const [hov, setHov]           = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
@@ -436,24 +578,33 @@ function ProjectCard({ project, delay }) {
           background: C.surface,
           border: `1px solid ${hov ? "rgba(232,228,223,0.14)" : C.faint}`,
           opacity: inView ? 1 : 0,
-          transform: inView ? (hov ? "translateY(-7px)" : "translateY(0)") : "translateY(24px)",
+          transform: inView ? (hov ? "translateY(-5px)" : "translateY(0)") : "translateY(24px)",
           boxShadow: hov ? `0 20px 56px rgba(0,0,0,0.5), 0 0 0 1px ${project.color}28` : "none",
           transition: `opacity .6s ease ${delay}ms, transform .6s ease ${delay}ms, box-shadow .3s, border-color .3s`,
           cursor: "pointer",
+          height: "100%",
         }}
       >
         {/* Image */}
         <div style={{
-          height: "clamp(160px,20vw,220px)",
+          height: "clamp(140px,18vw,220px)",
           position: "relative", overflow: "hidden", background: "#0d0d1a",
+          flexShrink: 0,
         }}>
-          <img src={project.image[0]} alt={project.title} style={{
-            width: "100%", height: "100%", objectFit: "cover",
-            transform: hov ? "scale(1.06)" : "scale(1)",
-            transition: "transform .5s ease",
-          }} />
+          {/* Static first image on card — hover overlay */}
+          <img
+            src={project.image[0]}
+            alt={project.title}
+            loading="lazy"
+            style={{
+              width: "100%", height: "100%", objectFit: "cover",
+              transform: hov ? "scale(1.06)" : "scale(1)",
+              transition: "transform .5s ease",
+              display: "block",
+            }}
+          />
 
-          {/* Hover overlay — click to preview hint */}
+          {/* Hover overlay */}
           <div style={{
             position: "absolute", inset: 0,
             background: hov ? "rgba(6,6,14,.72)" : "transparent",
@@ -464,19 +615,18 @@ function ProjectCard({ project, delay }) {
             transition: "opacity .28s, background .28s",
           }}>
             <div style={{
-              width: 48, height: 48, borderRadius: "50%",
+              width: 44, height: 44, borderRadius: "50%",
               background: project.color,
               display: "flex", alignItems: "center", justifyContent: "center",
               color: "#0a0a0f", boxShadow: `0 6px 20px ${project.color}55`,
             }}>
-              {/* Eye icon */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                 <circle cx="12" cy="12" r="3"/>
               </svg>
             </div>
             <span style={{
-              padding: "8px 20px", borderRadius: 999,
+              padding: "7px 18px", borderRadius: 999,
               fontSize: "clamp(11px,1.1vw,13px)", fontWeight: 600,
               background: project.color, color: "#0a0a0f",
             }}>Preview Project →</span>
@@ -484,13 +634,15 @@ function ProjectCard({ project, delay }) {
         </div>
 
         {/* Body */}
-        <div style={{ padding: "clamp(14px,2vw,22px)", display: "flex", flexDirection: "column", flex: 1, gap: 10 }}>
+        <div style={{
+          padding: "clamp(12px,2vw,20px)",
+          display: "flex", flexDirection: "column", flex: 1, gap: 10,
+        }}>
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
             <h4 style={{
-              fontSize: "clamp(14px,1.4vw,17px)", fontWeight: 700, color: C.text,
+              fontSize: "clamp(13px,1.4vw,17px)", fontWeight: 700, color: C.text,
               margin: 0, fontFamily: "'Syne',sans-serif", lineHeight: 1.3,
             }}>{project.title}</h4>
-            {/* Small GH icon link — stops propagation so it goes direct */}
             <a
               href={project.github}
               target="_blank"
@@ -516,13 +668,16 @@ function ProjectCard({ project, delay }) {
               }}
             ><GHIcon size={14} /></a>
           </div>
-          <p style={{ fontSize: "clamp(11px,1.05vw,13px)", color: C.muted, lineHeight: 1.7, margin: 0, flex: 1 }}>
+          <p style={{
+            fontSize: "clamp(11px,1.05vw,13px)", color: C.muted,
+            lineHeight: 1.7, margin: 0, flex: 1,
+          }}>
             {project.desc}
           </p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
             {project.tags.map(t => (
               <span key={t} style={{
-                fontSize: "clamp(9px,0.85vw,11px)", padding: "3px 10px", borderRadius: 999,
+                fontSize: "clamp(9px,0.85vw,11px)", padding: "3px 9px", borderRadius: 999,
                 background: project.color + "18", color: project.color, fontWeight: 500,
               }}>{t}</span>
             ))}
@@ -541,7 +696,7 @@ function HeroBtn({ href, children, primary }) {
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
         display: "inline-flex", alignItems: "center", gap: 8,
-        padding: "clamp(10px,1.2vw,14px) clamp(18px,2vw,28px)",
+        padding: "clamp(10px,1.2vw,14px) clamp(16px,2vw,28px)",
         borderRadius: 999,
         fontSize: "clamp(12px,1.1vw,14px)", fontWeight: 600, textDecoration: "none",
         background: primary ? (hov ? "#f5b07a" : C.accent) : "transparent",
@@ -550,6 +705,7 @@ function HeroBtn({ href, children, primary }) {
         transform: hov ? "scale(1.04)" : "scale(1)",
         boxShadow: primary && hov ? `0 8px 24px ${C.accent}55` : "none",
         transition: "all .2s ease", whiteSpace: "nowrap",
+        touchAction: "manipulation",
       }}>{children}</a>
   );
 }
@@ -561,14 +717,15 @@ function SocialBtn({ label, url, icon }) {
     <a href={url} target="_blank" rel="noopener noreferrer" title={label}
       onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       style={{
-        width: "clamp(36px,3.5vw,44px)", height: "clamp(36px,3.5vw,44px)",
+        width: "clamp(38px,4vw,44px)", height: "clamp(38px,4vw,44px)",
         borderRadius: "50%",
         display: "flex", alignItems: "center", justifyContent: "center",
         border: `1px solid ${hov ? "rgba(232,228,223,.3)" : C.faint}`,
-        color: C.text, fontSize: "clamp(14px,1.5vw,18px)", fontWeight: 700,
+        color: C.text, fontSize: "clamp(13px,1.5vw,18px)", fontWeight: 700,
         opacity: hov ? 1 : 0.38,
         transition: "opacity .2s, border-color .2s",
         textDecoration: "none",
+        touchAction: "manipulation",
       }}>{icon}</a>
   );
 }
@@ -577,11 +734,7 @@ function SocialBtn({ label, url, icon }) {
    MAIN
 ───────────────────────────────────────── */
 export default function Home() {
-  const vw = useVW();
-  const sm  = vw < 480;
-  const md  = vw >= 480 && vw < 768;
-  const lg  = vw >= 768 && vw < 1024;
-  const xl  = vw >= 1024;
+  const bp = useBP();
 
   const [scrolled,  setScrolled]  = useState(false);
   const [heroVis,   setHeroVis]   = useState(false);
@@ -590,13 +743,14 @@ export default function Home() {
   useEffect(() => {
     const t = setTimeout(() => setHeroVis(true), 80);
     const s = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", s);
+    window.addEventListener("scroll", s, { passive: true });
     return () => { clearTimeout(t); window.removeEventListener("scroll", s); };
   }, []);
 
-  useEffect(() => { if (xl || lg) setMenuOpen(false); }, [xl, lg]);
+  // Close menu on resize to desktop
+  useEffect(() => { if (!bp.mobile) setMenuOpen(false); }, [bp.mobile]);
 
-  const [skillsRef, skillsIn]   = useInView(0.04);
+  const [skillsRef,  skillsIn]  = useInView(0.04);
   const [contactRef, contactIn] = useInView(0.1);
 
   const anim = (d) => ({
@@ -607,9 +761,29 @@ export default function Home() {
 
   const NAV = ["About","Skills","Projects","Contact"];
 
-  const skillGrid = sm ? "1fr 1fr" : md ? "1fr 1fr" : lg ? "repeat(3,1fr)" : "repeat(4,1fr)";
-  const projGrid  = sm || md ? "1fr" : "repeat(2,1fr)";
-  const secPad    = `clamp(48px,7vw,100px) clamp(16px,5vw,64px)`;
+  /* ── Responsive grid columns ── */
+  const skillGrid = bp.xs || bp.sm
+    ? "1fr 1fr"
+    : bp.md
+    ? "1fr 1fr 1fr"
+    : bp.lg
+    ? "repeat(3,1fr)"
+    : "repeat(4,1fr)";
+
+  const projGrid = bp.mobile ? "1fr" : "repeat(2,1fr)";
+
+  /* ── Section padding ── */
+  const secPad = bp.xs
+    ? "40px 16px"
+    : bp.sm
+    ? "48px 20px"
+    : bp.md
+    ? "56px 28px"
+    : bp.lg
+    ? "72px 40px"
+    : "88px 64px";
+
+  const navH = bp.mobile ? "54px" : "64px";
 
   return (
     <div style={{
@@ -627,6 +801,8 @@ export default function Home() {
         body { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
         img  { display: block; max-width: 100%; }
         a    { text-decoration: none; }
+        button { font-family: inherit; }
+
         @keyframes blobFloat {
           0%   { transform: translate(0,0) scale(1); }
           100% { transform: translate(24px,-16px) scale(1.07); }
@@ -642,17 +818,18 @@ export default function Home() {
           from { opacity:0; transform:translateY(-6px); }
           to   { opacity:1; transform:translateY(0); }
         }
-        @keyframes scrollImages {
-          0% { transform: translateX(0); }
-          38% { transform: translateX(0); }
-          40% { transform: translateX(-33.33%); }
-          78% { transform: translateX(-33.33%); }
-          80% { transform: translateX(-66.67%); }
-          100% { transform: translateX(-66.67%); }
-        }
+
         ::-webkit-scrollbar          { width: 5px; }
         ::-webkit-scrollbar-track    { background: ${C.bg}; }
         ::-webkit-scrollbar-thumb    { background: rgba(232,228,223,.14); border-radius:3px; }
+
+        /* Prevent tap highlight on touch */
+        a, button { -webkit-tap-highlight-color: transparent; }
+
+        /* Safe area for notched phones */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+          footer { padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+        }
       `}</style>
 
       {/* ── NAV ── */}
@@ -660,14 +837,15 @@ export default function Home() {
         position: "fixed", inset: "0 0 auto 0", zIndex: 200,
         background: scrolled || menuOpen ? "rgba(10,10,15,.96)" : "rgba(10,10,15,.72)",
         backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
         borderBottom: `1px solid ${scrolled ? "rgba(232,228,223,.1)" : "rgba(232,228,223,.05)"}`,
         transition: "background .3s, border-color .3s",
       }}>
         <div style={{
-          maxWidth: 1120, margin: "0 auto",
-          padding: `0 clamp(16px,3vw,32px)`,
+          maxWidth: 1140, margin: "0 auto",
+          padding: `0 clamp(16px,3vw,40px)`,
           display: "flex", alignItems: "center", justifyContent: "space-between",
-          height: "clamp(54px,6vw,64px)",
+          height: navH,
         }}>
           <span style={{
             fontSize: "clamp(16px,2vw,20px)", fontWeight: 800,
@@ -675,8 +853,8 @@ export default function Home() {
           }}>K.K.L</span>
 
           {/* Desktop links */}
-          {!sm && !md && (
-            <div style={{ display: "flex", gap: "clamp(16px,2.5vw,32px)" }}>
+          {!bp.mobile && (
+            <div style={{ display: "flex", gap: "clamp(20px,2.5vw,36px)" }}>
               {NAV.map(l => (
                 <a key={l} href={`#${l.toLowerCase()}`}
                   style={{ color: C.text, opacity: .55, fontSize: "clamp(12px,1.1vw,14px)", fontWeight: 400, transition: "opacity .2s" }}
@@ -688,10 +866,17 @@ export default function Home() {
           )}
 
           {/* Hamburger */}
-          {(sm || md) && (
-            <button onClick={() => setMenuOpen(o => !o)} aria-label="Toggle menu"
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 8,
-                       display: "flex", flexDirection: "column", gap: 5 }}>
+          {bp.mobile && (
+            <button
+              onClick={() => setMenuOpen(o => !o)}
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={menuOpen}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                padding: "8px", display: "flex", flexDirection: "column",
+                gap: 5, touchAction: "manipulation",
+              }}
+            >
               {[0,1,2].map(i => (
                 <span key={i} style={{
                   display: "block", width: 22, height: 2,
@@ -709,18 +894,18 @@ export default function Home() {
         </div>
 
         {/* Mobile menu */}
-        {(sm || md) && menuOpen && (
+        {bp.mobile && menuOpen && (
           <div style={{
             borderTop: `1px solid ${C.faint}`,
-            padding: "12px 20px 18px",
+            padding: "12px 20px clamp(16px,4vw,24px)",
             animation: "menuIn .2s ease",
           }}>
             {NAV.map(l => (
               <a key={l} href={`#${l.toLowerCase()}`}
                 onClick={() => setMenuOpen(false)}
                 style={{
-                  display: "block", padding: "11px 0",
-                  color: C.text, fontSize: "clamp(14px,3vw,16px)", fontWeight: 500,
+                  display: "block", padding: "13px 0",
+                  color: C.text, fontSize: "clamp(14px,3.5vw,17px)", fontWeight: 500,
                   borderBottom: `1px solid ${C.faint}`, opacity: .8,
                 }}>{l}</a>
             ))}
@@ -731,62 +916,74 @@ export default function Home() {
       {/* ── HERO ── */}
       <header id="about" style={{
         position: "relative",
-        paddingTop:    `clamp(96px,12vw,148px)`,
-        paddingBottom: `clamp(56px,8vw,100px)`,
-        paddingLeft:   `clamp(16px,5vw,64px)`,
-        paddingRight:  `clamp(16px,5vw,64px)`,
+        paddingTop: `calc(${navH} + clamp(36px,6vw,72px))`,
+        paddingBottom: `clamp(48px,8vw,100px)`,
+        paddingLeft: `clamp(16px,5vw,64px)`,
+        paddingRight: `clamp(16px,5vw,64px)`,
         overflow: "hidden",
-        minHeight: "clamp(480px,60vw,640px)",
+        minHeight: `calc(${navH} + clamp(360px,50vw,600px))`,
       }}>
-        <Blob w="clamp(160px,30vw,380px)" h="clamp(160px,30vw,380px)" color={C.accent}  top="0%"  left="-8%" />
-        <Blob w="clamp(130px,24vw,300px)" h="clamp(130px,24vw,300px)" color={C.teal}   top="50%" right="-8%" delay="3s" />
-        <Blob w="clamp(120px,16vw,200px)" h="clamp(120px,16vw,200px)" color={C.purple} bottom="5%" left="40%" delay="5.5s" />
+        {/* Blobs — scaled for mobile */}
+        <Blob
+          w="clamp(120px,35vw,380px)" h="clamp(120px,35vw,380px)"
+          color={C.accent} top="0%" left="-8%"
+        />
+        <Blob
+          w="clamp(100px,25vw,300px)" h="clamp(100px,25vw,300px)"
+          color={C.teal} top="50%" right="-8%" delay="3s"
+        />
+        <Blob
+          w="clamp(80px,18vw,200px)" h="clamp(80px,18vw,200px)"
+          color={C.purple} bottom="5%" left="40%" delay="5.5s"
+        />
 
-        <div style={{ maxWidth: "100%", position: "relative", zIndex: 10 }}>
+        <div style={{ maxWidth: 720, position: "relative", zIndex: 10 }}>
 
           <p style={{
             ...anim(0),
             fontSize: "clamp(9px,1vw,12px)", letterSpacing: ".28em",
             textTransform: "uppercase", opacity: heroVis ? .44 : 0,
-            marginBottom: "clamp(8px,1vw,14px)",
+            marginBottom: "clamp(6px,1vw,14px)",
           }}>Full-Stack Developer</p>
 
           <h1 style={{
             ...anim(100),
             fontFamily: "'Syne',sans-serif", fontWeight: 800,
-            fontSize: "clamp(1.8rem,4.5vw,3.8rem)",
+            fontSize: "clamp(1.7rem,5.5vw,3.8rem)",
             lineHeight: 1.06,
             background: `linear-gradient(120deg, ${C.text} 0%, ${C.accent} 50%, ${C.text} 100%)`,
             backgroundSize: "200% auto",
             WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
             backgroundClip: "text",
             animation: "shimmer 6s linear infinite",
-            marginBottom: "clamp(10px,1.5vw,18px)",
+            marginBottom: "clamp(8px,1.5vw,18px)",
           }}>Kaung Khant Lin</h1>
 
           <div style={{
             ...anim(200),
             display: "flex", alignItems: "center", flexWrap: "wrap",
-            gap: 4, marginBottom: "clamp(18px,2.5vw,28px)",
-            minHeight: "clamp(24px,3vw,36px)",
+            gap: 4, marginBottom: "clamp(16px,2.5vw,28px)",
+            minHeight: "clamp(22px,3vw,36px)",
           }}>
-            <span style={{ fontSize: "clamp(13px,1.6vw,18px)", fontWeight: 500, color: "rgba(232,228,223,.6)" }}>
+            <span style={{ fontSize: "clamp(13px,1.8vw,18px)", fontWeight: 500, color: "rgba(232,228,223,.6)" }}>
               I build&nbsp;
             </span>
-            <span style={{ fontSize: "clamp(13px,1.6vw,18px)", fontWeight: 500 }}>
+            <span style={{ fontSize: "clamp(13px,1.8vw,18px)", fontWeight: 500 }}>
               <Typewriter words={["web applications.","REST APIs.","AI-powered apps.","IoT systems.","reliable backend services."]} />
             </span>
           </div>
 
+          {/* Bio card */}
           <div style={{
             ...anim(300),
             position: "relative", maxWidth: "min(520px, 100%)",
-            padding: "clamp(14px,1.8vw,22px) clamp(16px,2vw,24px)",
+            padding: "clamp(12px,1.8vw,22px) clamp(14px,2vw,24px)",
             borderRadius: 16,
             background: "rgba(22,22,42,.72)",
             border: `1px solid ${C.faint}`,
             backdropFilter: "blur(8px)",
-            marginBottom: "clamp(20px,3vw,34px)",
+            WebkitBackdropFilter: "blur(8px)",
+            marginBottom: "clamp(18px,3vw,34px)",
           }}>
             <div style={{
               position: "absolute", left: 0, top: 14, bottom: 14,
@@ -805,18 +1002,24 @@ export default function Home() {
             </p>
           </div>
 
+          {/* Stats */}
           <div style={{
             ...anim(380),
             display: "flex", flexWrap: "wrap",
-            gap: "clamp(8px,1.2vw,14px)",
-            marginBottom: "clamp(20px,3vw,34px)",
+            gap: "clamp(6px,1.2vw,14px)",
+            marginBottom: "clamp(18px,3vw,34px)",
           }}>
             <Stat icon="🚀" val="5+" label="PROJECTS" />
             <Stat icon="⚡" val="4+" label="LANGUAGES" />
             <Stat icon="🛠" val="12+" label="TOOLS" />
           </div>
 
-          <div style={{ ...anim(460), display: "flex", gap: "clamp(8px,1.2vw,14px)", flexWrap: "wrap" }}>
+          {/* CTA buttons */}
+          <div style={{
+            ...anim(460),
+            display: "flex", gap: "clamp(8px,1.2vw,14px)",
+            flexWrap: "wrap",
+          }}>
             <HeroBtn href="#projects" primary>View Projects ↓</HeroBtn>
             <HeroBtn href="#contact">Get in Touch</HeroBtn>
           </div>
@@ -825,16 +1028,21 @@ export default function Home() {
 
       {/* ── SKILLS ── */}
       <section id="skills" style={{ padding: secPad }}>
-        <div ref={skillsRef} style={{ maxWidth: "100%" }}>
-          <p style={{ fontSize: "clamp(9px,1vw,11px)", letterSpacing: ".26em", textTransform: "uppercase", opacity: .36, marginBottom: 6 }}>
-            Expertise
-          </p>
+        <div ref={skillsRef} style={{ maxWidth: 1140, margin: "0 auto" }}>
+          <p style={{
+            fontSize: "clamp(9px,1vw,11px)", letterSpacing: ".26em",
+            textTransform: "uppercase", opacity: .36, marginBottom: 6,
+          }}>Expertise</p>
           <h3 style={{
             fontSize: "clamp(20px,3vw,30px)", fontWeight: 700,
             fontFamily: "'Syne',sans-serif", color: C.text,
-            marginBottom: "clamp(24px,3.5vw,40px)",
+            marginBottom: "clamp(20px,3.5vw,40px)",
           }}>Skills & Technologies</h3>
-          <div style={{ display: "grid", gridTemplateColumns: skillGrid, gap: "clamp(8px,1.2vw,14px)" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: skillGrid,
+            gap: "clamp(7px,1.2vw,14px)",
+          }}>
             {SKILLS.map((s, i) => (
               <SkillPill key={s.name} skill={s} visible={skillsIn} delay={i * 40} />
             ))}
@@ -844,16 +1052,22 @@ export default function Home() {
 
       {/* ── PROJECTS ── */}
       <section id="projects" style={{ padding: secPad, background: C.surface2 }}>
-        <div style={{ maxWidth: "100%" }}>
-          <p style={{ fontSize: "clamp(9px,1vw,11px)", letterSpacing: ".26em", textTransform: "uppercase", opacity: .36, marginBottom: 6 }}>
-            Portfolio
-          </p>
+        <div style={{ maxWidth: 1140, margin: "0 auto" }}>
+          <p style={{
+            fontSize: "clamp(9px,1vw,11px)", letterSpacing: ".26em",
+            textTransform: "uppercase", opacity: .36, marginBottom: 6,
+          }}>Portfolio</p>
           <h3 style={{
             fontSize: "clamp(20px,3vw,30px)", fontWeight: 700,
             fontFamily: "'Syne',sans-serif", color: C.text,
-            marginBottom: "clamp(24px,3.5vw,40px)",
+            marginBottom: "clamp(20px,3.5vw,40px)",
           }}>Featured Projects</h3>
-          <div style={{ display: "grid", gridTemplateColumns: projGrid, gap: "clamp(14px,2vw,26px)" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: projGrid,
+            gap: "clamp(12px,2vw,26px)",
+            alignItems: "start",
+          }}>
             {PROJECTS.map((p, i) => (
               <ProjectCard key={p.title} project={p} delay={i * 70} />
             ))}
@@ -868,29 +1082,41 @@ export default function Home() {
           opacity: contactIn ? 1 : 0,
           transform: contactIn ? "translateY(0)" : "translateY(20px)",
           transition: "opacity .7s ease, transform .7s ease",
-          padding: "0 clamp(0px,2vw,16px)",
+          padding: `0 clamp(0px,2vw,16px)`,
         }}>
           <h2 style={{
-            fontSize: "clamp(22px,3.5vw,32px)", fontWeight: 700,
+            fontSize: "clamp(20px,3.5vw,32px)", fontWeight: 700,
             fontFamily: "'Syne',sans-serif", color: C.text, marginBottom: 12,
           }}>Let's Work Together</h2>
           <p style={{ opacity: .44, marginBottom: 28, fontSize: "clamp(12px,1.2vw,15px)", lineHeight: 1.65 }}>
             Have a project in mind? I'd love to hear about it.
           </p>
-          <a href="mailto:kaungkhantlin2332003@gmail.com"
+          <a
+            href="mailto:kaungkhantlin2332003@gmail.com"
             style={{
-              display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "center",
-              padding: "clamp(11px,1.4vw,15px) clamp(16px,2.5vw,28px)",
+              display: "inline-flex", alignItems: "center", gap: 8,
+              flexWrap: "wrap", justifyContent: "center",
+              padding: "clamp(11px,1.4vw,15px) clamp(14px,2.5vw,28px)",
               borderRadius: 999, fontSize: "clamp(11px,1.2vw,14px)", fontWeight: 600,
               background: C.accent, color: "#0a0a0f",
               transition: "transform .2s, box-shadow .2s",
-              maxWidth: "100%", wordBreak: "break-all",
+              wordBreak: "break-all", maxWidth: "100%",
             }}
-            onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.04)"; e.currentTarget.style.boxShadow = `0 10px 28px ${C.accent}55`; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)";    e.currentTarget.style.boxShadow = "none"; }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = "scale(1.04)";
+              e.currentTarget.style.boxShadow = `0 10px 28px ${C.accent}55`;
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
           >✉ kaungkhantlin2332003@gmail.com</a>
 
-          <div style={{ display: "flex", justifyContent: "center", gap: "clamp(12px,1.8vw,20px)", marginTop: "clamp(28px,4vw,44px)" }}>
+          <div style={{
+            display: "flex", justifyContent: "center",
+            gap: "clamp(14px,2vw,22px)",
+            marginTop: "clamp(24px,4vw,44px)",
+          }}>
             <SocialBtn label="GitHub"   url="https://github.com/ARIESTANK"                           icon="⑂" />
             <SocialBtn label="LinkedIn" url="https://www.linkedin.com/in/kaung-khant-lin-792b13390/" icon="in" />
             <SocialBtn label="Twitter"  url="https://twitter.com/kaungkhantlin2332003"               icon="𝕏" />
