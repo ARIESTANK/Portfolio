@@ -91,6 +91,14 @@ const PROJECTS = [
     github: "https://github.com/ARIESTANK/HR_Management_System",
   },
   {
+    title:  "Hospital Management System",
+    desc:   "Role Base Hospital Management System using C# (ASP.NET Core) and Oracle Database",
+    tags:   ["React","C# (ASP.NET Core)","JWT Auth","Oracle","REST API"],
+    color:  C.text,
+    image:  ["/images/hospital/hospital1.PNG","/images/hospital/hospital2.PNG","/images/hospital/hospital3.PNG","/images/hospital/hospital4.PNG"],
+    github: "https://github.com/ARIESTANK/HR_Management_System",
+  },
+  {
     title:  "Database Management Project",
     desc:   "DBMS project including database design, constraints, data modeling, stored procedures and indexes.",
     tags:   ["Project Management","Database Design","Data Modeling"],
@@ -1009,7 +1017,7 @@ export default function Home() {
             gap: "clamp(6px,1.2vw,14px)",
             marginBottom: "clamp(18px,3vw,34px)",
           }}>
-            <Stat icon="🚀" val="5+" label="PROJECTS" />
+            <Stat icon="🚀" val="7+" label="PROJECTS" />
             <Stat icon="⚡" val="4+" label="LANGUAGES" />
             <Stat icon="🛠" val="12+" label="TOOLS" />
           </div>
