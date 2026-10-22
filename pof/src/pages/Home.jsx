@@ -99,6 +99,23 @@ const PROJECTS = [
     github: "https://github.com/ARIESTANK/HR_Management_System",
   },
   {
+    title:  "Sadan - Your AI based documentation assistance",
+    desc:   "GenAI project using GoogleLLM models to analysis any documents and summerize the context",
+    tags:   ["GenAI","AI based analyzer","AI based Summerizer"],
+    color:  C.accent,
+    image:  ["/images/sadan/1.png","/images/sadan/2.png","/images/sadan/3.png","/images/sadan/4.png"],
+    github: "https://github.com/ARIESTANK/Documents_Analysis_Tool",
+  },
+  {
+    title:  "Edu Flow - Smart Learning Management System",
+    desc:   "Like moodle.org, the system contains the learning management and adminstraction system of schools",
+    tags:   ["Spring Boot","Angular","MySql",],
+    color:  C.coral,
+    image:  ["/images/lms/1.png","/images/lms/2.png","/images/lms/3.png","/images/lms/4.png","/images/lms/5.png"],
+    github: "https://github.com/ARIESTANK/Edu_Flow_LMS_system",
+  },
+
+  {
     title:  "Database Management Project",
     desc:   "DBMS project including database design, constraints, data modeling, stored procedures and indexes.",
     tags:   ["Project Management","Database Design","Data Modeling"],
